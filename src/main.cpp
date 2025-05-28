@@ -116,8 +116,8 @@ char progress(const char old)
   if(old == '|')
     return '/';
   if(old == '/')
-    return '-';
-  if(old == '-')
+    return '─';
+  if(old == '─')
     return '\\';
   return '|';
 }
