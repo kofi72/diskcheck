@@ -12,8 +12,6 @@
 #include <sys/ioctl.h>
 #include <linux/fs.h>
 
-#include <iostream>
-
 constexpr int sd_blocksize = 512;
 constexpr int blocksize_coefficient = 128;
 const int global_open_flags = O_NOCTTY | O_NOATIME | O_DIRECT | O_SYNC; // see man open(2)
@@ -113,6 +111,19 @@ void handle_file(const int fd, const blksize_t blocksize, const off_t size)
   return;
 }
 
+char progress(const char old)
+{
+  if(old == '|')
+    return '/';
+  if(old == '/')
+    return '-';
+  if(old == '-')
+    return '\\';
+  return '|';
+}
+
+char global_progress = '|';
+
 void error_encounter(char const*const what)
 {
   (void) write(2, "\n", 1);
@@ -125,13 +136,18 @@ void error_encounter(char const*const what)
 
 void status(int percent_complete)
 {
-  char * status = new char[5];
+  char * status = new char[9];
   status[0] = 0x0D;
   status[1] = 0x30+(percent_complete/100) %10;
   status[2] = 0x30+(percent_complete/10)  %10;
   status[3] = 0x30+(percent_complete)     %10;
   status[4] = '%';
-  (void) write(2, status, 5);
+  status[5] = ' ';
+  status[6] = '[';
+  status[7] = global_progress;
+  global_progress = progress(global_progress);
+  status[8] = ']';
+  (void) write(2, status, 9);
 }
 
 void handle_file_ro(const int fd, const blksize_t blocksize, const off_t size) noexcept
